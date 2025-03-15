@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+  </head>
+  <body>
+    <main>
+      <section id="header">
+        <div class="header-items">
+          <div class="gpt-logo">
+            <i id="icon" class="fa fa-robot"></i>
+            <h1 id="homeTitle" class="title">Home</h1>
+            <h1 id="settingsTitle" class="title">Settings</h1>
+          </div>
+          <button id="settingsButton" title="Settings">
+            <i class="fa fa-cog"></i>
+          </button>
+          <button id="homeButton" title="Settings">
+            <i class="fa fa-house"></i>
+          </button>
+        </div>
+      </section>
+      <section id="homeView">
+        <div class="general">
+          <div class="relative">
+            <textarea id="requestInput" placeholder="Ask"></textarea>
+            <button id="sendButton" class="blue-color"><i class="fa fa-paper-plane"></i></button>
+          </div>
+          <div id="notice"></div>
+        </div>
+      </section>
+      <section id="settingsView">
+        <div class="settings">
+          <div class="relative">
+            <textarea id="apiInput" placeholder="Enter your API key"></textarea>
+            <button id="saveButton" class="blue-color">
+              <i class="fa fa-floppy-disk"></i>
+            </button>
+            <button id="removeButton" class="red-color">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

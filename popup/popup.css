@@ -1,0 +1,130 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+main {
+  width: 100%;
+  max-width: 100%;
+}
+#header {
+  padding: 0.5rem;
+}
+
+#response {
+  display: none;
+  margin-top: 20px;
+  white-space: pre-wrap;
+  font-size: 14px;
+  color: #333;
+}
+.relative {
+  position: relative;
+  overflow: hidden;
+  max-width: 60rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.header-items {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.general,
+.settings {
+  border-top: 2px rgba(0, 0, 0, 0.1) solid;
+}
+.general,
+.settings {
+  padding: 0.5rem;
+}
+
+textarea {
+  min-height: 1lh;
+  height: auto;
+  min-width: 20rem;
+  max-width: 40rem;
+  resize: none;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  font-size: 1.2rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  field-sizing: content;
+  white-space: nowrap;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+.title {
+  font-weight: bold;
+  font-size: .8rem;
+  color: #007bff;
+  margin: 0;
+}
+.blue-color {
+  background-color: #007bff;
+}
+.blue-color:hover {
+  background-color: #0056b3;
+}
+.red-color {
+  background-color: #ff0000;
+}
+.red-color:hover {
+  background-color: #b30000;
+}
+button {
+  min-width: fit-content;
+  padding-block: 0.25rem;
+  padding-inline: 0.75rem;
+  color: white;
+  font-weight: bold;
+  border: none;
+  outline: transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:disabled, button:disabled:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+i {
+  color: white;
+}
+#settingsButton,
+#homeButton {
+  cursor: pointer;
+}
+#settingsButton:hover,
+#homeButton:hover {
+  background-color: #39ce39;
+}
+#settingsButton,
+#homeButton,
+.gpt-logo {
+  background-color: rgba(0, 0, 0, 0.1);
+  border: none;
+  outline: transparent;
+  padding-block: 0.5rem;
+  padding-inline: 0.65rem;
+  border-radius: 0.5rem;
+}
+.gpt-logo {
+  display: flex;
+  gap: 0.5rem;
+}
+.gpt-logo span {
+  color: white;
+  font-weight: 400;
+}
+.hidden {
+  display: none;
+}
