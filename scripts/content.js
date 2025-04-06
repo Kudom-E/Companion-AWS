@@ -61,23 +61,37 @@ function appendList(message) {
   const stepsList = document.getElementById("steps-list");
   const stepsArray = message.split(/\d+\.\s+/).filter(Boolean);
 
-  stepsArray.forEach((step, index) => {
-    const listItem = document.createElement("li");
+  if (stepsArray.length > 1) {
+    stepsArray
+      .filter(
+        (step) => step.trim() !== "You are already in the correct section."
+      )
+      .forEach((step, index) => {
+        const listItem = document.createElement("li");
 
-    // Add the step number
-    const stepNumber = document.createElement("span");
-    stepNumber.classList.add("step-number");
-    stepNumber.textContent = index + 1;
-    listItem.appendChild(stepNumber);
+        // Add the step number
+        const stepNumber = document.createElement("span");
+        stepNumber.classList.add("step-number");
+        stepNumber.textContent = index + 1;
+        listItem.appendChild(stepNumber);
 
-    // Add the step content
+        // Add the step content
+        const stepContent = document.createElement("span");
+        stepContent.classList.add("step-content");
+        stepContent.textContent = step;
+        listItem.appendChild(stepContent);
+
+        stepsList.appendChild(listItem);
+      });
+  } else {
+    const Item = document.createElement("li");
+    // Add the content
     const stepContent = document.createElement("span");
-    stepContent.classList.add("step-content");
-    stepContent.textContent = step;
-    listItem.appendChild(stepContent);
-
-    stepsList.appendChild(listItem);
-  });
+    stepContent.classList.add("content");
+    stepContent.textContent = stepsArray[0];
+    Item.appendChild(stepContent);
+    stepsList.appendChild(Item);
+  }
 
   navigatingSteps(stepsArray);
 }
@@ -101,7 +115,11 @@ function navigatingSteps(stepsArray) {
       return;
     }
 
-    let keyword = stepsArray[currentStepIndex].match(/['"]([^'"]+)['"]/);
+    let filtered = stepsArray.filter(
+      (step) => step.trim() !== "You are already in the correct section."
+    );
+
+    let keyword = filtered[currentStepIndex].match(/['"]([^'"]+)['"]/);
     keyword = keyword ? keyword[1] : null;
     console.log("active keyword:", keyword);
     const lowerCaseKeyword = keyword.toLowerCase();
@@ -128,6 +146,19 @@ function navigatingSteps(stepsArray) {
             `[data-testid="awsc-nav-services-menu-right-panel"]`
           );
           return rightPanel?.querySelector(`[href*="${lowerCaseKeyword}"]`);
+        }
+      }
+      if (!document.querySelector(`[href*="${lowerCaseKeyword}"]`)) {
+        let replacement = document.querySelector(
+          `[href*="${keyword.replace(" ", "")}"]`
+        );
+        if (replacement) {
+          return replacement;
+        } else {
+          const element = [...document.querySelectorAll("span")].find(
+            (span) => span.textContent.trim() === keyword
+          );
+          return element;
         }
       }
       return document.querySelector(`[href*="${lowerCaseKeyword}"]`);

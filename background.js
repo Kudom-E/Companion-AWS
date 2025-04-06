@@ -3,10 +3,7 @@
 // 2.Select "Compute" from the dropdown menu.
 // 3.Click on "EC2" to access EC2 instances.
 
-
 chrome.runtime.onInstalled.addListener(function (details) {
-  let defaultModel = "gpt-4";
-
   if (details.reason === "install") {
     chrome.storage.local.set({ isInstalled: true });
   }
@@ -15,6 +12,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "fetchData") {
     const prompt = message.prompt;
+    let defaultModel = "gpt-4o";
 
     // Fetch data from OpenAI
     chrome.storage.local.get("apiKey", async ({ apiKey }) => {
@@ -24,63 +22,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         return;
       }
-      chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
-        const activeTab = tabs[0];
-        if (!activeTab || !activeTab.url) {
-          sendResponse({ error: "Unable to retrieve the active tab URL." });
-          return;
-        }
-        const activeTabUrl = activeTab.url;
+      chrome.tabs.query(
+        { active: true, currentWindow: true },
+        async function (tabs) {
+          const activeTab = tabs[0];
+          if (!activeTab || !activeTab.url) {
+            sendResponse({ error: "Unable to retrieve the active tab URL." });
+            return;
+          }
+          const activeTabUrl = activeTab.url;
 
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: 
-            [
+          try {
+            const response = await fetch(
+              "https://api.openai.com/v1/chat/completions",
               {
-                "role": "system",
-                "content": "You are an assistant for AWS services. Your task is to provide concise, actionable, and step-by-step instructions for users to navigate the AWS Console and perform tasks based on their current location (URL provided). \n\n**Key Guidelines:**\n1. When the action can be performed in the AWS Console, provide only console-based instructions. If the action requires using the terminal, provide terminal steps with CLI commands only.\n2. Reference AWS official documentation (when relevant) to guide users using precise steps similar to AWS documentation standards.\n3. Avoid general or vague instructions like 'Navigate to the EC2 page.' Instead, provide direct and detailed steps, e.g., 'Click the Services dropdown at the top left, select Compute, and click EC2.'\n4. Tailor the instructions based on the provided URL to minimize redundant steps. Skip service navigation steps if the user is already in the correct service section.\n5. If complex multi-step navigation is required in the Console, clearly separate each navigation or interaction as distinct steps.\n6.  Remember, do not provide a title, the response should start right away from the first step."
-              },
-              {
-                "role": "user",
-                "content": `Transform the following query into precise, actionable instructions. Use step-by-step instructions similar to the format in AWS official documentation. Assume the user is already logged in to AWS and is on a page within the console (URL provided). Do **not** include steps to log in or go to the home console. Use the user's current URL to determine their location on the AWS dashboard and only provide steps that follow from their current location. Each instruction must involve only one action.\n\n### Example for a query: **Find EC2**\n1. Click the "Services" dropdown at the top left.\n2. Select "Compute" from the dropdown menu.\n3. Click "EC2" to access the EC2 service page.\n\n### Example query when already in the service: **Modify EC2 Instance Settings** (URL: https://us-east-2.console.aws.amazon.com/ec2/home?region=us-east-2#Instances:)\n1. You are already in the EC2 instance section.\n2. Click the checkbox next to the desired instance.\n3. Select 'Actions' from the top menu.\n4. Click 'Security' and then 'Modify Security Groups.'\n\nNow apply this approach to the following query: \"${prompt}\", Current URL: \"${activeTabUrl}\". Provide only Console or Terminal instructions, based on what is required to perform the task. If terminal instructions are necessary, provide only those, and if Console instructions are required, focus entirely on those. Always reference AWS documentation URLs if available, for more detailed instructions.`
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                  model: defaultModel,
+                  messages: [
+                    {
+                      role: "system",
+                      content:
+                        "You are an assistant for AWS services. Your task is to provide concise, actionable, and step-by-step instructions to help users perform tasks in the AWS Console or AWS CLI, based on the user's current location (URL).\n\nFollow these strict guidelines:\n\n1. **Console vs Terminal**: If the action can be performed in the AWS Console, provide console instructions only. If the action requires the CLI, provide terminal instructions only. Never mix both.\n\n2. **User's Current Location (URL)**: Base your instructions on the user's current URL. You may choose one of the following navigation paths:\n   - If the service is not already in view, start with: `Click 'Services' button at the top left.`\n   - If a relevant link (e.g., a recently visited service) is visible, begin from that link.\n\n3. **No Search Field**: Never instruct the user to type into the AWS Console search bar.\n\n4. **One Action per Instruction**: Each step must describe only one action. Do not combine actions with 'and' or similar phrasing.\n\n5. **Be Specific**: Avoid vague instructions like 'go to EC2'. Instead, use precise steps: `Click 'Services', then click 'Compute', then click 'EC2'.`\n\n6. **Current Section Awareness**: If the user is already in the correct section (as determined by the URL), **do not include a message like 'You are already in the correct section.'** Proceed directly with the next action, such as 'Click 'Launch Instance'.\n\n7. **AWS Documentation Style**: Present instructions as a numbered list with precise wording and AWS's official tone.\n\n8. **No Titles**: Begin directly from Step 1.\n\n9. **Reference Documentation**: If relevant, include a URL to the appropriate AWS documentation at the end of the instructions.\n\n10. **Limit User Guidance**: After step 3 or a similar initial action, if further user interaction is required (e.g., configuring options), do not provide excessive instructions. Allow the user to complete remaining steps manually unless further clarification is needed.",
+                    },
+                    {
+                      role: "user",
+                      content: `Transform the following query into precise, actionable instructions. Use numbered, step-by-step instructions that follow AWS documentation standards. The user is already logged in and currently viewing a specific page in the AWS Console. The current page is provided via the URL below.\n\nApply these rules when generating instructions:\n\n1. Determine if the user is already on the correct page to perform the task based on the current URL. If so, respond with: You are already in the correct section. Do not include any further navigation steps.\n\n2. If navigation is required, you may only choose one of two starting paths:\n   - If navigating from the top, begin with: Click 'Services' button at the top left.\n   - If a visible link on the page (e.g., from 'Recently visited') leads to the target location, start directly from that link.\n\n3. Never use the AWS Console search input. Do not instruct the user to type into any search bar.\n\n4. Each instruction must describe only one action. Do not combine actions or use words like 'and'.\n\n5. Focus entirely on either Console or Terminal instructions — never mix them.\n\n6. If Terminal instructions are necessary, provide CLI steps only.\n\nNow apply these rules to the following query:\n\nQuery: "${prompt}"\nCurrent URL: "${activeTabUrl}"\n\nOnly respond with step-by-step instructions or a message confirming the user is already at the correct location.`,
+                    },
+                  ],
+                  max_tokens: 250,
+                }),
               }
-            ],
-            "max_tokens": 250
-          })
-          ,
-        });
+            );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("API Error Details:", errorText); // Log the full error message        
-          sendResponse({ error: `API Error: ${response.statusText}. Details: ${errorText}` });
-          return;
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error("API Error Details:", errorText); // Log the full error message
+              sendResponse({
+                error: `API Error: ${response.statusText}. Details: ${errorText}`,
+              });
+              return;
+            }
+
+            const data = await response.json();
+            if (
+              data &&
+              data.choices &&
+              data.choices[0] &&
+              data.choices[0].message
+            ) {
+              sendResponse({ data: data.choices[0].message.content.trim() });
+
+              chrome.tabs.sendMessage(activeTab.id, {
+                type: "showOverlay",
+                text: data.choices[0].message.content.trim(),
+              });
+            } else {
+              sendResponse({ error: "No valid response from OpenAI." });
+            }
+          } catch (error) {
+            console.error("Error fetching from OpenAI:", error);
+            sendResponse({ error: "Failed to fetch data from OpenAI." });
+          }
         }
-
-        const data = await response.json();
-        if (data && data.choices && data.choices[0] && data.choices[0].message) {
-          sendResponse({ data: data.choices[0].message.content.trim() });
-
-          chrome.tabs.sendMessage(activeTab.id, {
-            type: "showOverlay",
-            text: data.choices[0].message.content.trim()
-          });
-
-        } else {
-          sendResponse({ error: "No valid response from OpenAI." });
-        }
-      } catch (error) {
-        console.error("Error fetching from OpenAI:", error);
-        sendResponse({ error: "Failed to fetch data from OpenAI." });
-      }
-      })
+      );
     });
 
     // Return true to indicate the response will be sent asynchronously
