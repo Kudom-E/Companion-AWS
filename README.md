@@ -1,6 +1,6 @@
 # 🧭 Companion: AWS Navigation
 
-![Demo GIF](/Demo.gif)
+![Demo GIF](demo/Demo.gif)
 
 **Companion: AWS Navigation**
 Navigate AWS faster with an intelligent and context-aware companion.
@@ -10,8 +10,6 @@ Navigate AWS faster with an intelligent and context-aware companion.
 - [Overview](#-overview)
 - [Features](#-features)
 - [Getting Started](#-getting-started)
-  - [Prerequisites](#-prerequisites)
-  1. [Clone the Repository](#1-clone-the-repository)
 
 ## 📌 Overview
 
