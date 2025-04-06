@@ -61,10 +61,6 @@ function appendList(message) {
   const stepsList = document.getElementById("steps-list");
   const stepsArray = message.split(/\d+\.\s+/).filter(Boolean);
 
-  
-  if(stepsArray[0].includes("Services") && (stepsArray[0].includes("dropdown") | stepsArray[0].includes("top left") | stepsArray[0].includes("button") )) {
-    console.log("navigating through services menu")
-  }
   stepsArray.forEach((step, index) => {
     const listItem = document.createElement("li");
 
@@ -108,20 +104,43 @@ function navigatingSteps(stepsArray) {
     let keyword = stepsArray[currentStepIndex].match(/['"]([^'"]+)['"]/);
     keyword = keyword ? keyword[1] : null;
     console.log("active keyword:", keyword);
+    const lowerCaseKeyword = keyword.toLowerCase();
+
+    const findStepElement = () => {
+      // if we're navigating the services menu
+      if (
+        stepsArray[0].includes("Services") &&
+        (stepsArray[0].includes("dropdown") ||
+          stepsArray[0].includes("top") ||
+          stepsArray[0].includes("button"))
+      ) {
+        if (currentStepIndex === 0) {
+          const headerComponent = document.getElementById("awsc-nav-header");
+          return headerComponent?.querySelector(`[title="${keyword}"]`);
+        } else if (currentStepIndex === 1) {
+          const leftPanel = document.querySelector(
+            `[data-testid="awsc-nav-services-menu-left-panel"]`
+          );
+
+          return leftPanel?.querySelector(`[href*="${lowerCaseKeyword}"]`);
+        } else if (currentStepIndex === 2) {
+          const rightPanel = document.querySelector(
+            `[data-testid="awsc-nav-services-menu-right-panel"]`
+          );
+          return rightPanel?.querySelector(`[href*="${lowerCaseKeyword}"]`);
+        }
+      }
+      return document.querySelector(`[href*="${lowerCaseKeyword}"]`);
+    };
 
     const observer = new MutationObserver(() => {
-      let stepElement =
-        currentStepIndex === 0
-          ? document.querySelector(`[title="${keyword}"]`)
-          : document.querySelector(`[href*="${keyword.toLowerCase()}"]`);
+      let stepElement = findStepElement();
 
-      if (stepElement) {
-        console.log("Step element found!");
-        console.log("element:", stepElement);
-        console.log("element parent:", stepElement.closest('h2'));
+      if (stepElement && !stepElement.classList.contains("pulse-border")) {
+        console.log("Step element found:", stepElement);
         stepElement.classList.add("pulse-border");
 
-        // When the step element is clicked
+        // When the step element is clicked, moving to the next step
         const handleClick = () => {
           if (currentStepIndex < stepsArray.length - 1) {
             console.log(`Moving to step ${currentStepIndex + 1}`);
@@ -148,5 +167,3 @@ function navigatingSteps(stepsArray) {
 
   highlightNextStep();
 }
-
-// correct test-id of right_ppanel= awsc-nav-services-menu-right-panel

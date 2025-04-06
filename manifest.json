@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AWS Support",
+  "name": "Companion: AWS Navigation",
   "version": "0.1.0",
-  "description": "AWS AI support in navigation",
+  "description": "AWS AI support in navigatiing AWS dashboard",
   "host_permissions": [
     "https://api.openai.com/*",
     "https://*.console.aws.amazon.com/*"
