@@ -17,7 +17,7 @@ Companion: AWS Navigation is a lightweight Chrome extension designed to supercha
 
 No more digging through menus. Companion shows the most relevant links to you, right when and where you need them.
 
-## 🚀 Features
+## 📦 Features
 
     - 🔍 Chat input feature to make requests
     - 🧠 Context-aware reponses based on your current AWS Console page
