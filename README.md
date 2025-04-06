@@ -31,14 +31,14 @@ No more digging through menus. Companion shows the most relevant links to you, r
 
 Follow these steps to install the extension locally for development or testing:
 
-### Prerequisites
+## Prerequisites
 
-#### 🧩 For Users (Installing the Extension)
+🧩 For Users (Installing the Extension)
 
     - **Google Chrome** (latest version recommended).
     - **AWS Console Access** logged into the AWS Console.
 
-#### 👨‍💻 For Developers (Building / Contributing)
+👨‍💻 For Developers (Building / Contributing)
 
     - **Node.js** (v16 or higher recommended).
     - **npm** (comes with Node.js).
