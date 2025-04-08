@@ -9,12 +9,20 @@
   ],
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
       "js": ["scripts/content.js"],
       "css": ["scripts/styles.css"],
+      "matches": ["https://*.console.aws.amazon.com/*"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["helpers/createOverlay.js",
+      "helpers/clearList.js","helpers/appendList.js","helpers/navigatingSteps.js"],
       "matches": ["https://*.console.aws.amazon.com/*"]
     }
   ],

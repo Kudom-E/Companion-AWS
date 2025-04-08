@@ -132,10 +132,10 @@ document.addEventListener("DOMContentLoaded", function () {
               (response) => {
                 if (chrome.runtime.lastError) {
                   console.error("Error sending message to background:", chrome.runtime.lastError.message);
-                } else if (response.error) {
-                  console.error("Error from OpenAI:", response.error);
+                } else if (!response) {
+                  console.error("Error from OpenAI:", response);
                 } else {
-                  console.log("OpenAI Responded");
+                  console.log("OpenAI Responded:", response.data);
                 }
               }
             );
