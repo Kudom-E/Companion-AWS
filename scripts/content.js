@@ -1,21 +1,20 @@
 // On routing which causes scripts to be ejected check if a list should be persisting
-chrome.storage.local.get(["message","completed", "stepReached"], ({ message, completed, stepReached }) => {
-  console.log(completed)
-  console.log(stepReached)
+chrome.storage.local.get(["message", "completed"], ({ message, completed }) => {
+  console.log("isCompleted:", completed);
   if (message && !completed) {
     createOverlay(message);
-  }else if(message && completed){
-    chrome.storage.local.remove(["message", "completed", "stepReached"], () => {
-      console.log("Overlay and state cleared")
-    })
-  }else if(message === "undefined"){
+  } else if (message && completed) {
+    chrome.storage.local.remove(["message", "completed"], () => {
+      console.log("Overlay and state cleared");
+    });
+    chrome.storage.local.set({ stepReached: 0 });
+  } else if (!message) {
     chrome.storage.local.set({ stepReached: 0 });
   }
+  chrome.storage.local.get("stepReached", (stepReached) => {
+    console.log(stepReached);
+  });
 });
-
-
-
-
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "showOverlay") {
@@ -23,8 +22,6 @@ chrome.runtime.onMessage.addListener((message) => {
     createOverlay(message.text);
   }
 });
-
-
 
 let hideTimeout;
 
@@ -74,10 +71,6 @@ function createOverlay(message) {
   }, 120000);
 }
 
-
-
-
-
 function appendList(message) {
   const stepsList = document.getElementById("steps-list");
   const stepsArray = message.split(/\d+\.\s+/).filter(Boolean);
@@ -117,16 +110,6 @@ function appendList(message) {
   navigatingSteps(stepsArray);
 }
 
-
-
-
-
-
-
-
-
-
-
 function clearList() {
   const stepsList = document.getElementById("steps-list");
   const highlightedSteps = document.querySelectorAll(".pulse-border");
@@ -139,63 +122,43 @@ function clearList() {
   if (stepsList) {
     stepsList.innerHTML = ""; // Clear the list content
     console.log("List cleared successfully");
-  } 
-  else {
+  } else {
     console.error("Steps list not found, can't clear!");
   }
 }
 
-
-
-
-async function getCurrentStepIndex(){
-  const {stepReached} = await chrome.storage.local.get("stepReached");
+async function getCurrentStepIndex() {
+  const { stepReached } = await chrome.storage.local.get("stepReached");
   return stepReached || 0;
 }
 
-
-
-
 async function navigatingSteps(stepsArray) {
-  
   let currentStepIndex = await getCurrentStepIndex();
-
 
   const highlightNextStep = () => {
     const filtered = stepsArray.filter(
       (step) => step.trim() !== "You are already in the correct section."
     );
-    
+
     if (currentStepIndex >= stepsArray.length) {
       console.log("All steps completed!");
       return;
     }
 
-
-    
-    let isServiceNav = filtered[0]?.includes("Services") &&
-                      (filtered[0]?.includes("dropdown") ||
-                        filtered[0]?.includes("top") ||
-                        filtered[0]?.includes("button"));
+    let isServiceNav =
+      filtered[0]?.includes("Services") &&
+      (filtered[0]?.includes("dropdown") ||
+        filtered[0]?.includes("top") ||
+        filtered[0]?.includes("button"));
 
     let keyword = filtered[currentStepIndex]?.match(/['"]([^'"]+)['"]/);
     keyword = keyword ? keyword[1] : null;
     console.log("active keyword:", keyword);
     const lowerCaseKeyword = keyword?.toLowerCase();
 
-
-
-
-
-
-
-
-
-
     const findStepElement = () => {
       // if we're navigating the services menu
       if (isServiceNav) {
-
         if (currentStepIndex === 0) {
           const headerComponent = document.getElementById("awsc-nav-header");
           return headerComponent?.querySelector(`[title="${keyword}"]`);
@@ -204,16 +167,34 @@ async function navigatingSteps(stepsArray) {
             `[data-testid="awsc-nav-services-menu-left-panel"]`
           );
 
-          return leftPanel?.querySelector(`[href*="${lowerCaseKeyword}"]`);
+          let leftItem = leftPanel?.querySelector(
+            `[href*="${lowerCaseKeyword}"]`
+          );
+
+          if (leftItem) return leftItem;
+
+          console.log(leftPanel);
+          return [...leftPanel.querySelectorAll("span")].find(
+            (span) => span.textContent.trim() === keyword
+          );
         } else if (currentStepIndex === 2) {
           const rightPanel = document.querySelector(
             `[data-testid="awsc-nav-services-menu-right-panel"]`
           );
-          return rightPanel?.querySelector(`[href*="${lowerCaseKeyword}"]`);
+          console.log(rightPanel);
+          let rightItem = rightPanel?.querySelector(
+            `[href*="${lowerCaseKeyword}"]`
+          );
+
+          if (rightItem) return rightItem;
+
+          return [...rightPanel.querySelectorAll("h4")].find(
+            (head) => head.textContent.trim() === keyword
+          );
         }
       }
 
-      const hrefMatch = document.querySelector(`[href*="${lowerCaseKeyword}"]`)
+      const hrefMatch = document.querySelector(`[href*="${lowerCaseKeyword}"]`);
 
       if (hrefMatch) return hrefMatch;
       let replacement = document.querySelector(
@@ -222,32 +203,23 @@ async function navigatingSteps(stepsArray) {
       if (replacement) return replacement;
 
       return [...document.querySelectorAll("span")].find(
-        (span) => span.textContent.trim() === keyword)
-        
-    }
-   
+        (span) => span.textContent.trim() === keyword
+      );
+    };
 
-
-
-    
     const waitForStepElement = () => {
       const observer = new MutationObserver(() => {
         const stepElement = findStepElement();
 
-        if(stepElement){
+        if (stepElement) {
           observer.disconnect();
           handleStep(stepElement);
         }
       });
       observer.observe(document.body, { childList: true, subtree: true });
-    }
+    };
 
-
-
-    if (
-      isServiceNav &&
-      currentStepIndex === 2
-    ) {
+    if (isServiceNav && currentStepIndex === 2) {
       waitForStepElement(); // observe BEFORE finding
     } else {
       const stepElement = findStepElement();
@@ -257,43 +229,41 @@ async function navigatingSteps(stepsArray) {
         waitForStepElement(); // fallback observe AFTER fail
       }
     }
-   
-
   };
 
-
-
-
-
   const handleStep = (stepElement) => {
-
     if (!stepElement.classList.contains("pulse-border")) {
-
       console.log("Step element found:", stepElement);
       stepElement.classList.add("pulse-border");
-      
+
       const onClickHandler = () => {
         // After the step is clicked, move to the next step
-        if (currentStepIndex < stepsArray.length - 1){
-          if(currentStepIndex+1 > stepsArray.length - 1){
-            chrome.storage.local.set({ completed: true });
-            console.log("All steps completed!");
-          }
-          
+        console.log("cur step:", currentStepIndex);
+        if (currentStepIndex + 1 > stepsArray.length - 1) {
+          let overlayDiv = document.getElementById("aws-directions");
+
+          chrome.storage.local.set({ completed: true });
+          clearList();
+          overlayDiv.remove();
+          clearTimeout(hideTimeout);
+
+          console.log("All steps completed!");
+        } else if (currentStepIndex < stepsArray.length - 1) {
           currentStepIndex++;
           chrome.storage.local.set({ stepReached: currentStepIndex });
- 
+          console.log("step Advance:", currentStepIndex);
+
           highlightNextStep(); // Move to the next step
         }
-  
+
         // Remove the event listener once the step is completed
         stepElement.removeEventListener("click", onClickHandler);
       };
-  
+
       // Add the click event listener to the step element
       stepElement.addEventListener("click", onClickHandler);
-    };
-  }
+    }
+  };
 
   highlightNextStep();
 }
