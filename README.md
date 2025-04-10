@@ -9,6 +9,7 @@ Navigate AWS faster with an intelligent and context-aware companion.
 
 - [Overview](#-overview)
 - [Features](#-features)
+- [Prerequisites](#prerequisites)
 - [Getting Started](#-getting-started)
 
 ## 📌 Overview
@@ -25,10 +26,6 @@ No more digging through menus. Companion shows the most relevant links to you, r
     - ⚡ Button-border highlighting for improved navigation
     - 🌙 Clean and minimal UI, designed to blend seamlessly with AWS
 
-## 🚀 Getting Started
-
-Follow these steps to install the extension locally for development or testing:
-
 ## Prerequisites
 
 🧩 For Users (Installing the Extension)
@@ -38,8 +35,13 @@ Follow these steps to install the extension locally for development or testing:
 
 👨‍💻 For Developers (Building / Contributing)
 
+    - OpenAI API Key
     - **Node.js** (v16 or higher recommended).
     - **npm** (comes with Node.js).
+
+## 🚀 Getting Started
+
+Follow these steps to install the extension locally for development or testing:
 
 ### **1. Clone the Repository**
 
@@ -60,4 +62,14 @@ git clone https://github.com/Kudom-E/Companion-AWS.git
 
 ### **6. Pin it to your toolbar for easy access.**
 
-### **7. Navigate to any AWS Console page and click the extension icon to activate the overlay and use context-specific navigation tools.**
+### **8. Click the extension icon to open pop up.**
+
+### **9. Click on the settings button at the top right of the pop up.**
+
+### **10. Enter your OpenAI API key into the field and click on save.**
+
+### **11. There should be a placeholder in the input saying "API Key saved."**
+
+### **12. Click on the home button at the top right to navigate to the main part of the pop up."**
+
+### **13. Enter a navigation instruction like "find ec2" to test."**
