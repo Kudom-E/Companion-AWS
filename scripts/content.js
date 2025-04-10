@@ -6,6 +6,7 @@ chrome.storage.local.get(["message", "completed"], ({ message, completed }) => {
   } else if (message && completed) {
     chrome.storage.local.remove(["message", "completed"], () => {
       console.log("Overlay and state cleared");
+      showCompletedOverlay();
     });
     chrome.storage.local.set({ stepReached: 0 });
   } else if (!message) {
@@ -85,12 +86,12 @@ function showCompletedOverlay() {
   // Trigger fade-out after 2 seconds
   setTimeout(() => {
     completedDiv.classList.add("fade-out");
-  }, 2000);
+  }, 1000);
 
   // Remove from DOM after fade-out finishes (0.5s)
   setTimeout(() => {
     completedDiv.remove();
-  }, 2500);
+  }, 5000);
 }
 
 function appendList(message) {
