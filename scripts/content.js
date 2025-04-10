@@ -1,20 +1,23 @@
 // On routing which causes scripts to be ejected check if a list should be persisting
 chrome.storage.local.get(["message", "completed"], ({ message, completed }) => {
-  console.log("isCompleted:", completed);
-  if (message && !completed) {
+  // console.log("isCompleted:", completed);
+  if (message === "You are already in the correct section.") {
+    // console.log(message);
+    chrome.storage.local.remove("message");
+  } else if (message && !completed) {
     createOverlay(message);
   } else if (message && completed) {
     chrome.storage.local.remove(["message", "completed"], () => {
-      console.log("Overlay and state cleared");
+      // console.log("Overlay and state cleared");
       showCompletedOverlay();
     });
     chrome.storage.local.set({ stepReached: 0 });
   } else if (!message) {
     chrome.storage.local.set({ stepReached: 0 });
   }
-  chrome.storage.local.get("stepReached", (stepReached) => {
-    console.log(stepReached);
-  });
+  // chrome.storage.local.get("stepReached", (stepReached) => {
+  //   console.log("stepREached:",stepReached.stepReached);
+  // });
 });
 
 chrome.runtime.onMessage.addListener((message) => {

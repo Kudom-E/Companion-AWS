@@ -1,3 +1,52 @@
+// Decrypt function
+async function decryptData(encryptedData, iv) {
+  const encryptionKey = await getEncryptionKey(); // Get the encryption key
+
+  try {
+    const encryptedDataArray = new Uint8Array(encryptedData);
+    const ivArray = new Uint8Array(Object.values(iv));
+
+    if (ivArray.length !== 12) {
+      throw new Error("IV must be 12 bytes long for AES-GCM.");
+    }
+
+    const decryptedData = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: ivArray },
+      encryptionKey,
+      encryptedDataArray
+    );
+
+    const decryptedText = new TextDecoder().decode(decryptedData);
+    return decryptedText; // Return the decoded string
+  } catch (error) {
+    console.error("Decryption failed:", error.message);
+    throw error;
+  }
+}
+
+// Retrieve the encryption key from storage
+async function getEncryptionKey() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get("encryptionKey", async ({ encryptionKey }) => {
+      if (!encryptionKey) {
+        reject("Encryption key not found.");
+      } else {
+        try {
+          const key = await crypto.subtle.importKey(
+            "jwk", // Import the key in JWK format
+            JSON.parse(encryptionKey),
+            { name: "AES-GCM" },
+            true,
+            ["encrypt", "decrypt"]
+          );
+          resolve(key);
+        } catch (error) {
+          reject("Error importing encryption key: " + error);
+        }
+      }
+    });
+  });
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "fetchData") {
@@ -6,10 +55,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     chrome.storage.local.get("apiKey", async ({ apiKey }) => {
       if (!apiKey) {
-        sendResponse({ error: "API key not found. Please add it in settings." });
+        sendResponse({
+          error: "API key not found. Please add it in settings.",
+        });
         return;
       }
-      
+      const { encryptedData, iv } = JSON.parse(apiKey);
+      let decryptedKey;
+      try {
+        decryptedKey = await decryptData(encryptedData, iv); // Pass Base64 strings
+        console.log("Decrypted API Key:", decryptedKey);
+      } catch (error) {
+        console.error("Failed to decrypt API key:", error.message);
+      }
+
       chrome.tabs.query(
         { active: true, currentWindow: true },
         async function (tabs) {
@@ -27,15 +86,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${apiKey}`,
+                  Authorization: `Bearer ${decryptedKey}`,
                 },
                 body: JSON.stringify({
                   model: defaultModel,
                   messages: [
                     {
                       role: "system",
-                      content:
-                        `You are an assistant for AWS services. Your task is to provide concise, 
+                      content: `You are an assistant for AWS services. Your task is to provide concise, 
                         actionable, and step-by-step instructions to help users perform tasks 
                         in the AWS Console or AWS CLI, based on the user's current location 
                         (URL). You must be precise, the names of links or buttons can't be misspelled 
@@ -101,11 +159,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       necessary, provide CLI steps only.\n\nNow apply these rules to the 
                       following query:\n\nQuery: "${prompt}"\nCurrent URL: 
                       "${activeTabUrl}"\n\nOnly respond with step-by-step instructions or a 
-                      message confirming the user is already at the correct location.`,
+                      message confirming the user is already at the correct location.
+                      Example:
+                      Current URL: https://us-east-2.console.aws.amazon.com/ec2/home?region=us-east-2#TargetGroups
+                      Query: "Find EC2 instances"
+
+                      Response: "Click 'Instances' on the left sidebar."
+                      `,
                     },
                   ],
                   max_tokens: 2048,
-                  temperature: 0
+                  temperature: 0,
                 }),
               }
             );
@@ -139,26 +203,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.error("Error fetching from OpenAI:", error);
             sendResponse({ error: "Failed to fetch data from OpenAI." });
           }
-        });
-      })
+        }
+      );
+    });
 
     return true; // async response
-  }
-});
-
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'injectHelperScript') {
+  } else if (message.action === "injectHelperScript") {
     chrome.scripting.executeScript({
-      target: { tabId: sender.tab.id },  // Use the tabId from the sender
-      func: injectHelperScript
+      target: { tabId: sender.tab.id }, // Use the tabId from the sender
+      func: injectHelperScript,
     });
   }
 });
 
 function injectHelperScript() {
-  const script = document.createElement('script');
-  script.type = 'module'
-  script.src = chrome.runtime.getURL('helpers/createOverlay.js');  // Path to the helper file
+  const script = document.createElement("script");
+  script.type = "module";
+  script.src = chrome.runtime.getURL("helpers/createOverlay.js"); // Path to the helper file
   document.head.appendChild(script);
 }

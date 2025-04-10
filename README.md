@@ -30,7 +30,7 @@ No more digging through menus. Companion shows the most relevant links to you, r
 
 🧩 For Users (Installing the Extension)
 
-    - **Google Chrome** (latest version recommended).
+    - **Google Chrome** (latest version required).
     - **AWS Console Access** logged into the AWS Console.
 
 👨‍💻 For Developers (Building / Contributing)
