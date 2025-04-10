@@ -71,6 +71,28 @@ function createOverlay(message) {
   }, 120000);
 }
 
+function showCompletedOverlay() {
+  const completedDiv = document.createElement("div");
+  completedDiv.id = "completed-overlay";
+  completedDiv.innerHTML = `
+    <div class="completed-content">
+      <div class="check-icon">&#10004;</div>
+      <div class="completed-text">Completed</div>
+    </div>
+  `;
+  document.body.appendChild(completedDiv);
+
+  // Trigger fade-out after 2 seconds
+  setTimeout(() => {
+    completedDiv.classList.add("fade-out");
+  }, 2000);
+
+  // Remove from DOM after fade-out finishes (0.5s)
+  setTimeout(() => {
+    completedDiv.remove();
+  }, 2500);
+}
+
 function appendList(message) {
   const stepsList = document.getElementById("steps-list");
   const stepsArray = message.split(/\d+\.\s+/).filter(Boolean);
@@ -246,6 +268,7 @@ async function navigatingSteps(stepsArray) {
           clearList();
           overlayDiv.remove();
           clearTimeout(hideTimeout);
+          showCompletedOverlay();
 
           console.log("All steps completed!");
         } else if (currentStepIndex < stepsArray.length - 1) {
